@@ -1,60 +1,43 @@
-from rocket.parts.part import Part
+#from vehicle.parts.tanks.FS_LOX import FS_LOX
+from vehicle.parts.tanks.FS_RP1 import FS_RP1
+from vehicle.parts.tanks.FS_LOX import FS_LOX
+from vehicle.stage import Stage
+from vehicle.rocket import *
+from vehicle.stages import *
+from enviroment.body import *
 
+from tools import *
+from vehicle.parts.body.FS_body import FS_BODY
 
-def build_vehicle():
-    # Root body (reference frame origin)
-    root = Part(
-        name="Rocket",
-        mass_dry=0.0,
-        r_cg_local=[0, 0, 0],
-        I_cg_local=[[0, 0, 0],
-                    [0, 0, 0],
-                    [0, 0, 0]]
+def assembly():
+    attach(
+        child = FS_RP1,
+        parent = FS_BODY,
+        p_parent_child = [0,0,-1.5]
     )
 
-    tank = Part(
-        name="Tank",
-        mass_dry=500,
-        r_cg_local=[0, 0, 1.5],
-        I_cg_local=[[100, 0, 0],
-                    [0, 200, 0],
-                    [0, 0, 100]],
-        parent=root,
-        p_parent_child=[0, 0, 0]
+    attach(
+        child = FS_LOX,
+        parent = FS_BODY,
+        p_parent_child = [0,0,1.5]
     )
+    
 
-    engine = Part(
-        name="Engine",
-        mass_dry=200,
-        r_cg_local=[0, 0, 0.5],
-        I_cg_local=[[50, 0, 0],
-                    [0, 80, 0],
-                    [0, 0, 50]],
-        parent=root,
-        p_parent_child=[0, 0, -1.0]
-    )
 
-    return RocketAssembly(root)
 
 
 def main():
-    rocket = build_vehicle()
+    AstroLab = Rocket("AstroLab")
+    Stage1.add_part(FS_BODY)
+    for child in FS_BODY.children:
+        Stage1.add_part(child)
 
-    solver = RK4(dt=0.01)
+    AstroLab.add_stage(Stage1)
 
-    engine = SimulationEngine(
-        vehicle=rocket,
-        solver=solver,
-        t0=0.0,
-        tf=10.0
-    )
+    #print(Stage1.get_cg())    
+    
+    for p in (AstroLab.get_parts()):
+        print (p.get_relative_pose())
 
-    results = engine.run()
-
-    results.save("outputs/run_001")
-
-    print("Simulation finished.")
-
-
-if __name__ == "__main__":
-    main()
+assembly()
+main()
