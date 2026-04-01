@@ -1,8 +1,8 @@
 from .tank import Tank
-from .FS_LOX import FS_LOX
+from .SS_LOX import SS_LOX
 
-FS_RP1 = Tank(
-    name="First Stage Fuel Tank",
+SS_RP1 = Tank(
+    name="Second Stage Fuel Tank",
 
     # Structural material density
     material_rho= 2.7e-6 ,  # same structure material as FS_LOX (adjust if needed)
@@ -18,13 +18,13 @@ FS_RP1 = Tank(
 
     # Geometry
     thickness=5,
-    length=FS_LOX.length*2.6,
+    length=SS_LOX.length*2.6,
     radius=1990,
 
     # Mixture ratio reference
     OF=2.6,
 
     # Vehicle hierarchy
-    stage=1,
+    stage=2,
     parent=None
 )

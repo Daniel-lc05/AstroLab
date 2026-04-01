@@ -53,6 +53,11 @@ class Body(Part):
         # Masa seca
         mass_dry = material_rho * material_volume
 
+
+        self.top: float =self.length/2
+        self.bottom: float =-self.length/2
+
+
         # Inercia aproximada de cilindro hueco
         if I_cg_local is None:
             r_out = self.radius

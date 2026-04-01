@@ -1,11 +1,11 @@
 from .body import Body
 
-FS_BODY = Body(
-    name="First Stage Fuselage",
+FS_SS_Inter_Stage = Body(
+    name="First Stage Second Stage Interstage",
     material_rho=2.7e-6,  # Aluminum kg/mm³
-    length=6000.0,             # mm
-    radius=2000,              # mm
-    thickness=5,         # mm
+    length=3000,             # m
+    radius=2000,              # m
+    thickness=5,         # m
     r_cg_local=[0.0, 0.0, 0.0],
     aero=True,
     core=True,

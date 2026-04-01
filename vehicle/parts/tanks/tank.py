@@ -33,6 +33,8 @@ class Tank(Part):
 
         self.length = float(length)
         self.radius = float(radius)
+        self.top: float =self.length/2
+        self.bottom: float =-self.length/2
 
         self.fuel_type = str(fuel_type)
         self.fuel_rho = float(fuel_rho)
@@ -75,7 +77,7 @@ class Tank(Part):
     def get_mass(self) -> float:
         return float(self.mass_dry + self.fuel_mass)
 
-    def drain(self, output: float) -> None:
+    def drain(self, output) -> None:
         if not isinstance(output, (int, float)):
             raise TypeError("Output value must be numerical")
 
@@ -83,7 +85,6 @@ class Tank(Part):
         if new_mass != self.fuel_mass:
             self.fuel_mass = new_mass
             self.update_cg_local()
-            self.mark_dirty()
 
     def volume(self) -> float:
         return float(np.pi * (self.radius ** 2) * self.length)

@@ -13,6 +13,9 @@ class Part:
         I_cg_local: np.ndarray,
         aero: bool = False,
         core: bool = False,
+        main: bool = False,
+        top: float = 0,
+        bottom: float = 0,
         stage: int = 0,
         parent = None,
         p_parent_child: np.ndarray | None = None,
@@ -23,6 +26,7 @@ class Part:
         # Physical properties (defined in local frame)
         self.material_rho = float(material_rho)
         self.volume = float(volume)
+        self.vehicle_internal_pos = np.zeros(3)
         self.mass_dry = float(material_rho*volume)
         self.r_cg_local = np.asarray(r_cg_local, dtype=float)
         self.I_cg_local = np.asarray(I_cg_local, dtype=float)
@@ -30,11 +34,14 @@ class Part:
         # Flags / metadata
         self.aero = bool(aero)
         self.core = bool(core)
+        self.main = bool(main)
 
         # Hierarchy
         self.stage = int(stage)
         self.parent = parent
         self.children: list["Part"] = []
+        self.top: float(top)
+        self.bottom: float(bottom)
 
         # Dirty flag (recompute derived stuff when True)
         self.dirty = True
@@ -99,7 +106,8 @@ class Part:
         p = p_parent + R_parent @ self.p_parent_child
         return R, p
     
-
+    def set_local_frame_pos(self,pos):
+        self.vehicle_internal_pos = (0,0,pos)
 
 
     # --------------------------

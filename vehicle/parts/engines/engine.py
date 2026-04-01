@@ -1,11 +1,13 @@
 from ..base import Part
 from tools import *
-
+from ..tanks.tank import *
+from ...rocket import *
+from enviroment.enviroment import *
 
 class Engine(Part):
     """
     Rocket engine physical model.
-
+    First modelization as a cilinder
     This class only describes the engine and provides physical calculations.
     It does NOT perform simulation steps or drain propellant.
 
@@ -24,8 +26,6 @@ class Engine(Part):
         self,
         name: str,
         mass_dry: float,
-        r_cg_local,
-        I_cg_local,
         length: float,
         radius: float,
 
@@ -34,26 +34,38 @@ class Engine(Part):
         Isp_asl: float,
         Isp_vac: float,
 
-        fuel_type: list[str] | tuple[str, str],
+        fuel_type: list[str] | tuple[str, str], #Oxidizer,Fuel
         OF: float,
         maxtime: float,
 
-        fuel_tank=None,
-        oxidizer_tank=None,
+        fuel_tank=Tank,
+        oxidizer_tank=Tank,
 
         min_throttle: float = 0.0,
         max_throttle: float = 1.0,
         gimbal_max: float = 0.0,
 
         stage: int = 0,
+        status: bool=False,
         parent=None,
         p_parent_child=None,
-        R_parent_child=None,
+        R_parent_child=None
     ):
 
         # geometry
         self.length = float(length)
         self.radius = float(radius)
+        self.top: float =self.length/2
+        self.bottom: float =-self.length/2
+        self.r_cg_local = np.array([0.0, 0.0, 0.0])
+        Ixx = (1/12) * mass_dry * (3 * radius**2 + length**2)
+        Iyy = Ixx
+        Izz = 0.5 * mass_dry * radius**2
+        I_cg_local = np.array([
+                              [Ixx, 0.0, 0.0],
+                              [0.0, Iyy, 0.0],
+                              [0.0, 0.0, Izz]
+                                            ])
 
         # propulsion
         self.thrust_asl = float(thrust_asl)
@@ -71,11 +83,12 @@ class Engine(Part):
         self.max_throttle = float(max_throttle)
 
         # gimbal
-        self.gimbal_max = float(gimbal_max)
+        self.gimbal_max = np.deg2rad(float(gimbal_max))
 
         # tank connections
         self.fuel_tank = fuel_tank
         self.oxidizer_tank = oxidizer_tank
+        self.status = bool(status)
 
         # simple cylindrical envelope
         struct_volume = float(np.pi * self.length * self.radius**2)
@@ -87,7 +100,7 @@ class Engine(Part):
             name=name,
             material_rho=material_rho,
             volume=struct_volume,
-            r_cg_local=np.asarray(r_cg_local, dtype=float),
+            r_cg_local=np.asarray(self.r_cg_local, dtype=float),
             I_cg_local=np.asarray(I_cg_local, dtype=float),
             aero=False,
             stage=stage,
@@ -96,12 +109,10 @@ class Engine(Part):
             R_parent_child=R_parent_child,
         )
 
-        self.r_cg_local.setflags(write=False)
-
+        
     # =========================================================
     # Atmosphere helpers
     # =========================================================
-
     @staticmethod
     def pressure_ratio(p_ambient: float) -> float:
         """
@@ -113,7 +124,7 @@ class Engine(Part):
     # Propulsion
     # =========================================================
 
-    def get_isp(self, p_ambient: float) -> float:
+    def get_isp(self, p_ambient):
         """
         Returns engine Isp at given ambient pressure.
         """
@@ -121,15 +132,15 @@ class Engine(Part):
 
         return self.Isp_vac - pr * (self.Isp_vac - self.Isp_asl)
 
-    def get_max_thrust(self, p_ambient: float) -> float:
+    def get_max_thrust(self, p_ambient):
         """
-        Maximum thrust available at given ambient pressure.
+        Maximum thrust available at given ambient pressure
         """
         pr = self.pressure_ratio(p_ambient)
 
         return self.thrust_vac - pr * (self.thrust_vac - self.thrust_asl)
 
-    def get_thrust(self, p_ambient: float, throttle: float) -> float:
+    def get_thrust(self, p_ambient, throttle) :
         """
         Thrust produced for a given throttle level.
         """
@@ -141,13 +152,13 @@ class Engine(Part):
 
         throttle = min(throttle, self.max_throttle)
 
-        return throttle * self.get_max_thrust(p_ambient)
+        return throttle * self.get_max_thrust(p_ambient) #Simplified for 1D
 
     # =========================================================
     # Mass flow
     # =========================================================
 
-    def get_mass_flow(self, p_ambient: float, throttle: float) -> float:
+    def get_mass_flow(self, p_ambient, throttle):
         """
         Total propellant mass flow [kg/s]
         """
@@ -158,7 +169,7 @@ class Engine(Part):
 
         return thrust / (isp * self.G0)
 
-    def get_propellant_flows(self, p_ambient: float, throttle: float):
+    def get_propellant_flows(self, p_ambient, throttle):
         """
         Returns fuel and oxidizer mass flow.
         """
@@ -169,7 +180,27 @@ class Engine(Part):
 
         mdot_ox = mdot * self.OF / (1 + self.OF)
 
-        return mdot_fuel, mdot_ox
+        return mdot_ox, mdot_fuel 
+    
+    def burn (self,throttle,dt):
+        """
+        Substract the current propellant flow to the fuel mass in the tank
+        WARNING!! p_ambient assumed as 101325Pa to simplify the model!!!!
+        """
+        LOX_tank=self.oxidizer_tank
+        Fuel_tank=self.fuel_tank
+
+
+        ambient_pressure=101325
+        mdot_ox,mdot_fl=self.get_propellant_flows(ambient_pressure,throttle)
+        #print (mdot_ox*dt,mdot_fl*dt)
+        LOX_tank.drain(mdot_ox*dt)
+        Fuel_tank.drain(mdot_fl*dt)
+
+        
+
+
+
 
     # =========================================================
     # Gimbal
@@ -178,6 +209,7 @@ class Engine(Part):
     def get_gimbal_rotation(self, pitch: float, yaw: float):
         """
         Returns rotation matrix for gimbal angles.
+        -Angles in radians.
         """
 
         pitch = np.clip(pitch, -self.gimbal_max, self.gimbal_max)
@@ -203,7 +235,7 @@ class Engine(Part):
 
         return Ry @ Rx
 
-    def get_thrust_vector_local(self, p_ambient: float, throttle: float, pitch=0.0, yaw=0.0):
+    def get_thrust_vector_local(self, p_ambient, throttle, pitch, yaw):
         """
         Returns thrust vector in engine local frame.
         """
@@ -216,13 +248,12 @@ class Engine(Part):
 
         return thrust * (Rg @ axis)
 
-    # =========================================================
-    # Mass
-    # =========================================================
+    def turn_on(self):
+        self.status = True
+    
+    def turn_off(self):
+        self.status = False
 
-    def get_mass(self):
-
-        return float(self.mass_dry)
 
     # =========================================================
     # Representation

@@ -1,7 +1,7 @@
 from .tank import Tank
 
-FS_LOX = Tank(
-    name="First Stage Oxidizer Tank",
+SS_LOX = Tank(
+    name="Second Stage Oxidizer Tank",
 
     # Structural material density
     material_rho= 2.7e-6 ,  # e.g. aluminium density
@@ -18,13 +18,13 @@ FS_LOX = Tank(
 
     # Geometry
     thickness=5,
-    length=1500,
+    length=1000,
     radius=1990,
 
     # Mixture ratio reference
     OF=2.6,
 
     # Vehicle hierarchy
-    stage=1,
+    stage=2,
     parent=None
 )

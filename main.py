@@ -1,43 +1,53 @@
-#from vehicle.parts.tanks.FS_LOX import FS_LOX
-from vehicle.parts.tanks.FS_RP1 import FS_RP1
-from vehicle.parts.tanks.FS_LOX import FS_LOX
+################
+#    LOGICAL   #
+################
+from vehicle.builder.builder import VAB
 from vehicle.stage import Stage
 from vehicle.rocket import *
 from vehicle.stages import *
-from enviroment.body import *
-
 from tools import *
-from vehicle.parts.body.FS_body import FS_BODY
-
-def assembly():
-    attach(
-        child = FS_RP1,
-        parent = FS_BODY,
-        p_parent_child = [0,0,-1.5]
-    )
-
-    attach(
-        child = FS_LOX,
-        parent = FS_BODY,
-        p_parent_child = [0,0,1.5]
-    )
-    
-
-
+from solver.state import *
+from solver.simulation_1d import *
+from Analysis.plotter import *
 
 
 def main():
-    AstroLab = Rocket("AstroLab")
-    Stage1.add_part(FS_BODY)
-    for child in FS_BODY.children:
-        Stage1.add_part(child)
+    #print(get_pos_parts(FS_LOX,FS_BODY))
+    #rocketo = AstroLab.get_sorted_parts()
 
-    AstroLab.add_stage(Stage1)
+    for p in AstroLab.get_parts():
+        pos = get_pos_parts(p,AstroLab)
+        p.set_local_frame_pos(pos)    
 
-    #print(Stage1.get_cg())    
+def simulate():
+    simulation = Simulation1D(AstroLab,0.5,1000)
+    simulation.run(initial_state)
+    raw_data=simulation.get_data()
+    ordered_data = order(raw_data)
+    plotter(ordered_data)
     
-    for p in (AstroLab.get_parts()):
-        print (p.get_relative_pose())
 
-assembly()
+AstroLab=VAB()
 main()
+
+
+initial_state = State(
+    t=0.0,
+    h=0.0,
+    v=0.0,
+)
+
+
+
+#simulate()
+
+print(AstroLab.get_total_mass()*9.81/1000)
+
+
+
+
+
+"""
+for p in AstroLab.get_parts():
+    print(p.name,p.get_mass())
+"""

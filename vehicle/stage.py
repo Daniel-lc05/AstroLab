@@ -15,7 +15,7 @@ class Stage:
 
     def add_part(self, part):
         if part.stage != self.id:
-            raise ValueError("Part stage mismatch")
+            raise ValueError(f"{part.name} stage mismatch")
 
         self.parts.append(part)
 
@@ -25,13 +25,29 @@ class Stage:
 
 
     def get_parts(self):
-        return parts
+        return self.parts
 
 
     # --------------------------
     # Mass
     # --------------------------
 
+    
+    def get_fuel_mass(self):
+        mass_0=0
+        for t in self.parts:
+            if isinstance(part, Tank):
+                mass_0 += p.fuel_mass0
+        return mass_0
+    
+
+    def get_initial_fuel_mass(self):
+        mass=0
+        for t in self.parts:
+            if isinstance(part, Tank):
+                mass += p.fuel_mass
+        return mass
+    
     def get_mass(self):
         mass = 0.0
 
