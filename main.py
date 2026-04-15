@@ -20,12 +20,16 @@ def main():
         p.set_local_frame_pos(pos)    
 
 def simulate():
-    simulation = Simulation1D(AstroLab,0.5,1000)
+    simulation = Simulation1D(AstroLab,0.1,290)
     simulation.run(initial_state)
     raw_data=simulation.get_data()
     ordered_data = order(raw_data)
     plotter(ordered_data)
     
+def debug():
+    for p in AstroLab.get_parts():
+        print(p.name,p.length,"mm",p.get_mass(),"Kg")
+
 
 AstroLab=VAB()
 main()
@@ -39,15 +43,4 @@ initial_state = State(
 
 
 
-#simulate()
-
-print(AstroLab.get_total_mass()*9.81/1000)
-
-
-
-
-
-"""
-for p in AstroLab.get_parts():
-    print(p.name,p.get_mass())
-"""
+simulate()

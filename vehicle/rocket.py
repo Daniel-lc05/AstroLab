@@ -3,13 +3,17 @@ from tools import *
 from vehicle.stage import Stage
 from vehicle.stages import *
 
+#TEMPORAL
+from vehicle.parts.tanks.FS_LOX import *
+from vehicle.parts.tanks.FS_RP1 import *
+
 class Rocket:
 
     def __init__(self, name: str):
         self.name = name
         self.stages = []
-        self.Cd = 1.64
-        self.area = 3
+        self.Cd = 0.4
+        self.area = 0.070
 
     def add_stage(self, stage):
         self.stages.append(stage)
@@ -55,7 +59,11 @@ class Rocket:
         active=self.get_active_engines()
         thrust=0
         for engine in active:
-            thrust+=engine.get_thrust(get_atm_p(h),throttle)
+            if (engine.oxidizer_tank.get_fuel_mass() != 0) or (engine.fuel_tank.get_fuel_mass() != 0):
+                #print(engine.oxidizer_tank.get_fuel_mass(),engine.fuel_tank.get_fuel_mass())
+                thrust+=engine.get_thrust(get_atm_p(h),throttle)
+            else:
+                thrust=0
         
         if thrust> 0:
             return thrust

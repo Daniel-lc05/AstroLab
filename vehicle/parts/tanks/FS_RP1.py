@@ -1,6 +1,10 @@
 from .tank import Tank
 from .FS_LOX import FS_LOX
 
+
+fuel_rho = 8.10*10**(-7) # kg/mm^3
+OF=2.6
+
 FS_RP1 = Tank(
     name="First Stage Fuel Tank",
 
@@ -14,15 +18,16 @@ FS_RP1 = Tank(
     # Tank configuration
     oxidizer=False,
     fuel_type="RP1",
-    fuel_rho = 8.10*10**(-7),  # kg/mm^3
-
-    # Geometry
-    thickness=5,
-    length=FS_LOX.length*2.6,
-    radius=1990,
+    fuel_rho = fuel_rho,  # kg/mm^3
 
     # Mixture ratio reference
-    OF=2.6,
+    OF=OF,
+    
+    # Geometry
+    thickness=5,
+    length=FS_LOX.length * (FS_LOX.fuel_rho / (OF * fuel_rho)),
+    radius=150,
+
 
     # Vehicle hierarchy
     stage=1,

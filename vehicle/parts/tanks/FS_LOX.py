@@ -18,8 +18,8 @@ FS_LOX = Tank(
 
     # Geometry
     thickness=5,
-    length=1500,
-    radius=1990,
+    length=680,
+    radius=150,
 
     # Mixture ratio reference
     OF=2.6,

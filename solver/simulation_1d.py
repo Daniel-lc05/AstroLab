@@ -2,10 +2,17 @@ from vehicle.FDGS.control import *
 from .state import State
 from enviroment.enviroment import *
 
+#TEMPORAL
+from vehicle.parts.tanks.FS_LOX import *
+from vehicle.parts.tanks.FS_RP1 import *
+
 
 class Simulation1D:
     def __init__(self, rocket, dt, t_max):
         self.rocket = rocket
+        self.rocket_parts = rocket.get_parts()
+        self.LOX_tank = FS_RP1
+        self.Fuel_tank = FS_LOX
         self.dt = float(dt)
         self.t_max = float(t_max)
         self.history = []
@@ -27,16 +34,18 @@ class Simulation1D:
         thrust = self.rocket.get_total_thrust_vector1D(h,throttle)
         self.rocket.burn_fuel(throttle,self.dt)
         m = self.rocket.get_total_mass()
-
+        
+        
+        #print(FS_LOX.get_fuel_mass(),FS_RP1.get_fuel_mass(),thrust)
         
 
-        drag = -0.5 * rho * self.rocket.Cd * self.rocket.area * v * abs(v)
+        drag = 0.5 * rho * self.rocket.Cd * self.rocket.area * v * abs(v)
         weight = m * g
 
         F = thrust - drag - weight
         a = F / m
 
-        self.lists.append((state.t,v,h,thrust,drag,weight))# for debug
+        self.lists.append((state.t,abs(v),h,thrust,drag,weight,rho))# for debug
         new_state = State(
             t=state.t + self.dt,
             h=state.h + state.v * self.dt + 0.5 * a * self.dt**2,

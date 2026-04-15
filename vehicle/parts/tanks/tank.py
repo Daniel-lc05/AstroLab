@@ -76,6 +76,10 @@ class Tank(Part):
 
     def get_mass(self) -> float:
         return float(self.mass_dry + self.fuel_mass)
+    
+    def get_fuel_mass(self):
+        return self.fuel_mass
+
 
     def drain(self, output) -> None:
         if not isinstance(output, (int, float)):
